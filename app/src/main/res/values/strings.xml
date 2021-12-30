@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">allwecando</string>
+    <string name="accessibility_service_label">allwecando service</string>
+    <string name="accessibility_service_description">my description</string>
+</resources>
