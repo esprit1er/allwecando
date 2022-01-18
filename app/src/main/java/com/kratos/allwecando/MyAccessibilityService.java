@@ -3,6 +3,7 @@ package com.kratos.allwecando;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.accessibilityservice.GestureDescription;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Path;
@@ -21,6 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -37,23 +39,106 @@ public class MyAccessibilityService  extends AccessibilityService {
     public static final String TIME_SERVER = "kwynn.com";
     private boolean mustClick = true;
 
+    private double pricebuy = 27.00;
+    private int mintBuy = 2000;
+
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         Log.e(TAG, "onAccessibilityEvent: "+event.getEventType());
 
+        //AccessibilityNodeInfo rootInfo = getRootInActiveWindow();
         AccessibilityNodeInfo rootInfo = getRootInActiveWindow();
+        containerCallMarket(rootInfo);
         //For market snip
-        marketClick(rootInfo);
+        //marketClick(rootInfo);
         //for drop
-       // dropClick(rootInfo);
+        //dropClick(rootInfo);
 
         //Comics drop test
        // dropClickTest(rootInfo);
 
 
     }
+    public void containerCallMarket(AccessibilityNodeInfo rootInfo){
+        List<AccessibilityNodeInfo> detail = rootInfo.findAccessibilityNodeInfosByText("Details");
+        if (detail.size()>0){
+            Log.e(TAG, "marketclic: ");
+            marketClick(rootInfo);
+        }else{
+            Log.e(TAG, "snipmarket: ");
+            snipMarket(rootInfo);
+        }
+    }
+    /**
+     * in buy list , rootinfo is Framlayout without resource-id
+     * child0 is first chidl of rootinfo adn first viewgroup
+     * viewGroup1 contain the scrollview with all list
+     * @param rootInfo
+     */
+    public void snipMarket(AccessibilityNodeInfo rootInfo){
+        List<AccessibilityNodeInfo> scrollViews = new ArrayList<>();
+        findChildView(scrollViews,rootInfo);
 
+        if (scrollViews.size()>0){
+            AccessibilityNodeInfo scrollView = scrollViews.get(0);
+            if (scrollView.getChildCount()>0){
+                for (int j = 0; j< scrollView.getChildCount(); j++){
+                    AccessibilityNodeInfo viewGroups = scrollView.getChild(j);
+                    int mint = 0;
+                    if (viewGroups!= null && viewGroups.getChildCount()>0){
+                        for (int i = 0; i< viewGroups.getChildCount(); i++){
+                            if (viewGroups.getChild(i) != null && "android.widget.TextView".equals(viewGroups.getChild(i).getClassName()) && viewGroups.getChild(i).getText() != null){
+                                String text = viewGroups.getChild(i).getText().toString();
+                                if (text.split("#").length>1){
+                                    // Log.e(TAG, "textview mint " + viewGroups.getChild(i));
+                                    String mintText = text.split("#")[1];
+                                    try {
+                                        int mintNumber = Integer.parseInt(mintText);
+                                        Log.e(TAG, "mintNumber: "+mintNumber);
+                                        if (mintNumber<=this.mintBuy){
+                                            mint = mintNumber;
+                                        }
+                                    }catch (Exception e){
+                                        Log.e(TAG, "error: ", e);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if ( mint != 0){
+                        viewGroups.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                        break;
+                    }
+                }
+
+
+            }
+        }
+    }
+    private void findChildView( List<AccessibilityNodeInfo> listchild, AccessibilityNodeInfo roootnode){
+        if (roootnode != null){
+            for (int i = 0; i< roootnode.getChildCount() ; i++){
+                if (roootnode.getChild(i) != null && "android.widget.ScrollView".equals(roootnode.getChild(i).getClassName())){
+                    listchild.add(roootnode.getChild(i));
+                }
+                findChildView(listchild,roootnode.getChild(i));
+            }
+        }
+
+    }
+    public void dropClickTest( AccessibilityNodeInfo rootInfo){
+        for (AccessibilityNodeInfo node : rootInfo.findAccessibilityNodeInfosByText("6.99"))
+        {
+            try {
+                performdropClickComicsTest(node.getParent());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public long remainTime(Date date1) throws ParseException {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
@@ -79,16 +164,7 @@ public class MyAccessibilityService  extends AccessibilityService {
        // Log.e(TAG, "testGlobalTime: Time from " + TIME_SERVER + ": " + time);
         return time;
     }
-    public void dropClickTest( AccessibilityNodeInfo rootInfo){
-        for (AccessibilityNodeInfo node : rootInfo.findAccessibilityNodeInfosByText("6.99"))
-        {
-            try {
-                performdropClickComicsTest(node.getParent());
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+
 
     public void performdropClickComicsTest(AccessibilityNodeInfo nodeParent) throws ParseException {
         if (nodeParent != null && nodeParent.isClickable()  ){
@@ -131,7 +207,7 @@ public class MyAccessibilityService  extends AccessibilityService {
             if (nodeParent.getChildCount()<3){
                 nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                 try {
-                    Thread.sleep(240000);
+                    Thread.sleep(239000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -150,7 +226,7 @@ public class MyAccessibilityService  extends AccessibilityService {
                 performclickMarketClick(node.getParent());
             }
             try {
-                Thread.sleep(5000);
+                Thread.sleep(10000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -234,5 +310,16 @@ public class MyAccessibilityService  extends AccessibilityService {
         Date date2 = sdf.parse("2022-01-11 14:08:59.652");
 
         return checkDateSup(date1,date2);
+    }
+    public static boolean isNumeric(String strNum) {
+        if (strNum == null) {
+            return false;
+        }
+        try {
+            double d = Double.parseDouble(strNum);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
     }
 }
