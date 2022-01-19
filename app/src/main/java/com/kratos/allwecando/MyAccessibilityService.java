@@ -50,11 +50,11 @@ public class MyAccessibilityService  extends AccessibilityService {
 
         //AccessibilityNodeInfo rootInfo = getRootInActiveWindow();
         AccessibilityNodeInfo rootInfo = getRootInActiveWindow();
-        containerCallMarket(rootInfo);
+        //containerCallMarket(rootInfo);
         //For market snip
         //marketClick(rootInfo);
         //for drop
-        //dropClick(rootInfo);
+        dropClick(rootInfo);
 
         //Comics drop test
        // dropClickTest(rootInfo);
@@ -64,7 +64,6 @@ public class MyAccessibilityService  extends AccessibilityService {
     public void containerCallMarket(AccessibilityNodeInfo rootInfo){
         List<AccessibilityNodeInfo> detail = rootInfo.findAccessibilityNodeInfosByText("Details");
         if (detail.size()>0){
-            Log.e(TAG, "marketclic: ");
             marketClick(rootInfo);
         }else{
             Log.e(TAG, "snipmarket: ");
@@ -110,6 +109,11 @@ public class MyAccessibilityService  extends AccessibilityService {
 
                     if ( mint != 0){
                         viewGroups.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         break;
                     }
                 }
@@ -207,7 +211,7 @@ public class MyAccessibilityService  extends AccessibilityService {
             if (nodeParent.getChildCount()<3){
                 nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                 try {
-                    Thread.sleep(239000);
+                    Thread.sleep(239990);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -224,6 +228,7 @@ public class MyAccessibilityService  extends AccessibilityService {
             for (AccessibilityNodeInfo node : wallet.get(0).getParent().findAccessibilityNodeInfosByText("BUY NOW"))
             {
                 performclickMarketClick(node.getParent());
+                break;
             }
             try {
                 Thread.sleep(10000);
@@ -245,13 +250,6 @@ public class MyAccessibilityService  extends AccessibilityService {
         if (nodeParent != null && nodeParent.isClickable()  ){
             if (nodeParent.getChildCount()<3){
                 nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-               /* try {
-                    Thread.sleep(4000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }*/
-            }else {
-                Log.e(TAG, "Node child count : "+nodeParent.getChildCount());
             }
         }else if ((nodeParent != null) && (nodeParent.isClickable() == false)){
             AccessibilityNodeInfo newnodeParent = nodeParent.getParent();
