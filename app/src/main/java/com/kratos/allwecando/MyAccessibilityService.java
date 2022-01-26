@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.TimeZone;
 
 import androidx.annotation.RequiresApi;
@@ -35,12 +36,13 @@ public class MyAccessibilityService  extends AccessibilityService {
     private static final String TAG = "MyAccessibilityService";
     private AccessibilityNodeInfo rootInfoOld = null;
     private AccessibilityNodeInfo rootConfirmPurchase = null;
+    private AccessibilityNodeInfo itemMarket = null;
     private long globalRemaintime = 0;
     public static final String TIME_SERVER = "kwynn.com";
     private boolean mustClick = true;
 
-    private double pricebuy = 27.00;
-    private int mintBuy = 2000;
+    private double pricebuy = 25.00;
+    private int mintBuy = 4000;
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -50,14 +52,12 @@ public class MyAccessibilityService  extends AccessibilityService {
 
         //AccessibilityNodeInfo rootInfo = getRootInActiveWindow();
         AccessibilityNodeInfo rootInfo = getRootInActiveWindow();
-        //containerCallMarket(rootInfo);
+        containerCallMarketWithPrice(rootInfo);
+       // containerCallMarket(rootInfo);
         //For market snip
         //marketClick(rootInfo);
         //for drop
-        dropClick(rootInfo);
-
-        //Comics drop test
-       // dropClickTest(rootInfo);
+        //dropClick(rootInfo);
 
 
     }
@@ -66,8 +66,18 @@ public class MyAccessibilityService  extends AccessibilityService {
         if (detail.size()>0){
             marketClick(rootInfo);
         }else{
-            Log.e(TAG, "snipmarket: ");
             snipMarket(rootInfo);
+        }
+    }
+
+    public void containerCallMarketWithPrice(AccessibilityNodeInfo rootInfo){
+        if (rootInfo != null){
+            List<AccessibilityNodeInfo> detail = rootInfo.findAccessibilityNodeInfosByText("Details");
+            if (detail.size()>0){
+              marketClick(rootInfo);
+            }else{
+              snipMarketPrice(rootInfo);
+            }
         }
     }
     /**
@@ -79,7 +89,7 @@ public class MyAccessibilityService  extends AccessibilityService {
     public void snipMarket(AccessibilityNodeInfo rootInfo){
         List<AccessibilityNodeInfo> scrollViews = new ArrayList<>();
         findChildView(scrollViews,rootInfo);
-
+        Log.e(TAG, "findChildView size: " +scrollViews.size() );
         if (scrollViews.size()>0){
             AccessibilityNodeInfo scrollView = scrollViews.get(0);
             if (scrollView.getChildCount()>0){
@@ -91,11 +101,9 @@ public class MyAccessibilityService  extends AccessibilityService {
                             if (viewGroups.getChild(i) != null && "android.widget.TextView".equals(viewGroups.getChild(i).getClassName()) && viewGroups.getChild(i).getText() != null){
                                 String text = viewGroups.getChild(i).getText().toString();
                                 if (text.split("#").length>1){
-                                    // Log.e(TAG, "textview mint " + viewGroups.getChild(i));
                                     String mintText = text.split("#")[1];
                                     try {
                                         int mintNumber = Integer.parseInt(mintText);
-                                        Log.e(TAG, "mintNumber: "+mintNumber);
                                         if (mintNumber<=this.mintBuy){
                                             mint = mintNumber;
                                         }
@@ -107,13 +115,9 @@ public class MyAccessibilityService  extends AccessibilityService {
                         }
                     }
 
-                    if ( mint != 0){
+                    if ( mint != 0 && this.itemMarket != viewGroups){
+                        this.itemMarket = viewGroups;
                         viewGroups.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                        try {
-                            Thread.sleep(10);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
                         break;
                     }
                 }
@@ -122,16 +126,65 @@ public class MyAccessibilityService  extends AccessibilityService {
             }
         }
     }
+
+    public void snipMarketPrice(AccessibilityNodeInfo rootInfo){
+        findChildViewByPrice(rootInfo);
+    }
+    public void findChildViewByPrice( AccessibilityNodeInfo roootnode){
+        if (roootnode != null){
+            for (int i = 0; i< roootnode.getChildCount() ; i++){
+                if (roootnode.getChild(i) != null && "android.widget.ScrollView".equals(roootnode.getChild(i).getClassName())){
+                    testSnipMarketByPrice(roootnode.getChild(i));
+                    break;
+                }else{
+                    findChildViewByPrice(roootnode.getChild(i));
+                }
+            }
+        }
+    }
     private void findChildView( List<AccessibilityNodeInfo> listchild, AccessibilityNodeInfo roootnode){
+        boolean endLoop = true;
         if (roootnode != null){
             for (int i = 0; i< roootnode.getChildCount() ; i++){
                 if (roootnode.getChild(i) != null && "android.widget.ScrollView".equals(roootnode.getChild(i).getClassName())){
                     listchild.add(roootnode.getChild(i));
+                    endLoop = false;
+                    break;
                 }
-                findChildView(listchild,roootnode.getChild(i));
+                if (endLoop){
+                    findChildView(listchild,roootnode.getChild(i));
+                }
             }
         }
-
+    }
+    public void testSnipMarketByPrice(AccessibilityNodeInfo scrollView){
+        if (scrollView.getChildCount()>1){
+            for (int j = 0; j< scrollView.getChildCount(); j++){
+                AccessibilityNodeInfo viewGroups = scrollView.getChild(j);
+                double priceMarket = 0.0;
+                if (viewGroups!= null && viewGroups.getChildCount()>0){
+                    for (int i = 0; i< viewGroups.getChildCount(); i++){
+                        if (viewGroups.getChild(i) != null && "android.widget.TextView".equals(viewGroups.getChild(i).getClassName()) && viewGroups.getChild(i).getText() != null){
+                            String text = viewGroups.getChild(i).getText().toString();
+                            if (isNumeric(text)){
+                                try {
+                                    priceMarket = Double.parseDouble(text);
+                                    if ((priceMarket <= pricebuy) && (priceMarket != 0.0)){
+                                        break;
+                                    }
+                                }catch (Exception e){
+                                    Log.e(TAG, e.toString() );
+                                }
+                            }
+                        }
+                    }
+                }
+                if ((priceMarket <= pricebuy) && (priceMarket != 0.0) ){
+                    viewGroups.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    break;
+                }
+            }
+        }
     }
     public void dropClickTest( AccessibilityNodeInfo rootInfo){
         for (AccessibilityNodeInfo node : rootInfo.findAccessibilityNodeInfosByText("6.99"))
@@ -211,7 +264,7 @@ public class MyAccessibilityService  extends AccessibilityService {
             if (nodeParent.getChildCount()<3){
                 nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                 try {
-                    Thread.sleep(239990);
+                    Thread.sleep(239500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
