@@ -35,11 +35,7 @@ public class MyAccessibilityService  extends AccessibilityService {
 
     private static final String TAG = "MyAccessibilityService";
     private AccessibilityNodeInfo rootInfoOld = null;
-    private AccessibilityNodeInfo rootConfirmPurchase = null;
     private AccessibilityNodeInfo itemMarket = null;
-    private long globalRemaintime = 0;
-    public static final String TIME_SERVER = "kwynn.com";
-    private boolean mustClick = true;
 
     private int mintBuy = 4000;
 
