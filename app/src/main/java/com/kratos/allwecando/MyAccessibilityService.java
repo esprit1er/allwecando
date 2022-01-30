@@ -41,7 +41,7 @@ public class MyAccessibilityService  extends AccessibilityService {
     public static final String TIME_SERVER = "kwynn.com";
     private boolean mustClick = true;
 
-    private double pricebuy = 25.00;
+    private double pricebuy = 220.00;
     private int mintBuy = 4000;
 
 
