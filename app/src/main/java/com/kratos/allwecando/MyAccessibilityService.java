@@ -35,39 +35,18 @@ public class MyAccessibilityService  extends AccessibilityService {
 
     private static final String TAG = "MyAccessibilityService";
     private AccessibilityNodeInfo rootInfoOld = null;
-    private AccessibilityNodeInfo rootConfirmPurchase = null;
-    private AccessibilityNodeInfo itemMarket = null;
-    private long globalRemaintime = 0;
-    public static final String TIME_SERVER = "kwynn.com";
-    private boolean mustClick = true;
 
-    private double pricebuy = 220.00;
-    private int mintBuy = 4000;
+    private double pricebuy = 20.00;
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         Log.e(TAG, "onAccessibilityEvent: "+event.getEventType());
-
-        //AccessibilityNodeInfo rootInfo = getRootInActiveWindow();
         AccessibilityNodeInfo rootInfo = getRootInActiveWindow();
         containerCallMarketWithPrice(rootInfo);
-       // containerCallMarket(rootInfo);
-        //For market snip
-        //marketClick(rootInfo);
-        //for drop
-        //dropClick(rootInfo);
 
 
-    }
-    public void containerCallMarket(AccessibilityNodeInfo rootInfo){
-        List<AccessibilityNodeInfo> detail = rootInfo.findAccessibilityNodeInfosByText("Details");
-        if (detail.size()>0){
-            marketClick(rootInfo);
-        }else{
-            snipMarket(rootInfo);
-        }
     }
 
     public void containerCallMarketWithPrice(AccessibilityNodeInfo rootInfo){
@@ -80,52 +59,7 @@ public class MyAccessibilityService  extends AccessibilityService {
             }
         }
     }
-    /**
-     * in buy list , rootinfo is Framlayout without resource-id
-     * child0 is first chidl of rootinfo adn first viewgroup
-     * viewGroup1 contain the scrollview with all list
-     * @param rootInfo
-     */
-    public void snipMarket(AccessibilityNodeInfo rootInfo){
-        List<AccessibilityNodeInfo> scrollViews = new ArrayList<>();
-        findChildView(scrollViews,rootInfo);
-        Log.e(TAG, "findChildView size: " +scrollViews.size() );
-        if (scrollViews.size()>0){
-            AccessibilityNodeInfo scrollView = scrollViews.get(0);
-            if (scrollView.getChildCount()>0){
-                for (int j = 0; j< scrollView.getChildCount(); j++){
-                    AccessibilityNodeInfo viewGroups = scrollView.getChild(j);
-                    int mint = 0;
-                    if (viewGroups!= null && viewGroups.getChildCount()>0){
-                        for (int i = 0; i< viewGroups.getChildCount(); i++){
-                            if (viewGroups.getChild(i) != null && "android.widget.TextView".equals(viewGroups.getChild(i).getClassName()) && viewGroups.getChild(i).getText() != null){
-                                String text = viewGroups.getChild(i).getText().toString();
-                                if (text.split("#").length>1){
-                                    String mintText = text.split("#")[1];
-                                    try {
-                                        int mintNumber = Integer.parseInt(mintText);
-                                        if (mintNumber<=this.mintBuy){
-                                            mint = mintNumber;
-                                        }
-                                    }catch (Exception e){
-                                        Log.e(TAG, "error: ", e);
-                                    }
-                                }
-                            }
-                        }
-                    }
 
-                    if ( mint != 0 && this.itemMarket != viewGroups){
-                        this.itemMarket = viewGroups;
-                        viewGroups.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                        break;
-                    }
-                }
-
-
-            }
-        }
-    }
 
     public void snipMarketPrice(AccessibilityNodeInfo rootInfo){
         findChildViewByPrice(rootInfo);
@@ -138,21 +72,6 @@ public class MyAccessibilityService  extends AccessibilityService {
                     break;
                 }else{
                     findChildViewByPrice(roootnode.getChild(i));
-                }
-            }
-        }
-    }
-    private void findChildView( List<AccessibilityNodeInfo> listchild, AccessibilityNodeInfo roootnode){
-        boolean endLoop = true;
-        if (roootnode != null){
-            for (int i = 0; i< roootnode.getChildCount() ; i++){
-                if (roootnode.getChild(i) != null && "android.widget.ScrollView".equals(roootnode.getChild(i).getClassName())){
-                    listchild.add(roootnode.getChild(i));
-                    endLoop = false;
-                    break;
-                }
-                if (endLoop){
-                    findChildView(listchild,roootnode.getChild(i));
                 }
             }
         }
@@ -184,94 +103,6 @@ public class MyAccessibilityService  extends AccessibilityService {
                     break;
                 }
             }
-        }
-    }
-    public void dropClickTest( AccessibilityNodeInfo rootInfo){
-        for (AccessibilityNodeInfo node : rootInfo.findAccessibilityNodeInfosByText("6.99"))
-        {
-            try {
-                performdropClickComicsTest(node.getParent());
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-    public long remainTime(Date date1) throws ParseException {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
-        //Here you set to your timezone
-        sdf.setTimeZone(TimeZone.getDefault());
-
-        //Date date1 = sdf.parse(sdf.format(calendar.getTime()));
-        Date date2 = sdf.parse("2022-01-11 05:00:01.000");
-        long remainTime = date2.getTime() - date1.getTime();
-        Log.e(TAG, "remainTime: "+remainTime );
-
-        //Delay between
-        return remainTime;
-    }
-
-    public Date testGlobalTime() throws IOException {
-        NTPUDPClient timeClient = new NTPUDPClient();
-        InetAddress inetAddress = InetAddress.getByName(TIME_SERVER);
-        TimeInfo timeInfo = timeClient.getTime(inetAddress);
-        long returnTime = timeInfo.getReturnTime();
-        Date time = new Date(returnTime);
-       // Log.e(TAG, "testGlobalTime: Time from " + TIME_SERVER + ": " + time);
-        return time;
-    }
-
-
-    public void performdropClickComicsTest(AccessibilityNodeInfo nodeParent) throws ParseException {
-        if (nodeParent != null && nodeParent.isClickable()  ){
-            if (nodeParent.getChildCount()<3){
-                if (mustClick){
-                    mustClick = false;
-                    AsyncTask.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                try {
-                                    Thread.sleep(remainTime(testGlobalTime()));
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }
-                                nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
-                }
-            }
-        }else if ((nodeParent != null) && (nodeParent.isClickable() == false)){
-            AccessibilityNodeInfo newnodeParent = nodeParent.getParent();
-            performdropClick(newnodeParent);
-        }
-    }
-
-    public void dropClick( AccessibilityNodeInfo rootInfo){
-        for (AccessibilityNodeInfo node : rootInfo.findAccessibilityNodeInfosByText("BUY NOW"))
-        {
-            performdropClick(node.getParent());
-        }
-    }
-    public void performdropClick(AccessibilityNodeInfo nodeParent){
-        if (nodeParent != null && nodeParent.isClickable()  ){
-            if (nodeParent.getChildCount()<3){
-                nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                try {
-                    Thread.sleep(239500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }else if ((nodeParent != null) && (nodeParent.isClickable() == false)){
-            AccessibilityNodeInfo newnodeParent = nodeParent.getParent();
-            performdropClick(newnodeParent);
         }
     }
 
@@ -320,7 +151,6 @@ public class MyAccessibilityService  extends AccessibilityService {
         super.onServiceConnected();
 
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-       // info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
         info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_SPOKEN;
 
@@ -330,38 +160,6 @@ public class MyAccessibilityService  extends AccessibilityService {
         Log.d(TAG, "onServiceConnected: ");
     }
 
-    public void getDate(){
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
-        //Here you set to your timezone
-        sdf.setTimeZone(TimeZone.getDefault());
-        //Will print on your default Timezone
-        Log.e(TAG, "getDate: "+sdf.format(calendar.getTime()) );
-    }
-
-
-
-    public boolean checkDateSup(Date d1, Date d2){
-        int result = d1.compareTo(d2);
-        if (result>0){
-            return true;
-        }
-        return false;
-    }
-
-    public boolean clickable() throws ParseException {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
-        //Here you set to your timezone
-        sdf.setTimeZone(TimeZone.getDefault());
-
-        Date date1 = sdf.parse(sdf.format(calendar.getTime()));
-        Date date2 = sdf.parse("2022-01-11 14:08:59.652");
-
-        return checkDateSup(date1,date2);
-    }
     public static boolean isNumeric(String strNum) {
         if (strNum == null) {
             return false;
