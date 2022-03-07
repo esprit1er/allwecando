@@ -38,6 +38,7 @@ public class MyAccessibilityService  extends AccessibilityService {
     private AccessibilityNodeInfo itemMarket = null;
 
     private int mintBuy = 4000;
+    private int testIncrement = 0;
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -64,7 +65,7 @@ public class MyAccessibilityService  extends AccessibilityService {
     public void snipMarket(AccessibilityNodeInfo rootInfo){
         List<AccessibilityNodeInfo> scrollViews = new ArrayList<>();
         findChildView(scrollViews,rootInfo);
-        Log.e(TAG, "findChildView size: " +scrollViews.size() );
+
         if (scrollViews.size()>0){
             AccessibilityNodeInfo scrollView = scrollViews.get(0);
             if (scrollView.getChildCount()>0){
@@ -90,8 +91,9 @@ public class MyAccessibilityService  extends AccessibilityService {
                         }
                     }
 
-                    if ( mint != 0 && this.itemMarket != viewGroups){
+                    if ( mint != 0 && this.itemMarket != viewGroups && testIncrement == 0){
                         this.itemMarket = viewGroups;
+                        testIncrement++;
                         viewGroups.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                         break;
                     }
@@ -120,7 +122,7 @@ public class MyAccessibilityService  extends AccessibilityService {
 
     public void marketClick( AccessibilityNodeInfo rootInfo){
         List<AccessibilityNodeInfo> wallet =  rootInfo.findAccessibilityNodeInfosByText("Wallet Balance:");
-        if (wallet.size()>0 && wallet.get(0).getParent() != null){
+        if ((wallet.size()>0) && (wallet.get(0).getParent() != null)){
             for (AccessibilityNodeInfo node : wallet.get(0).getParent().findAccessibilityNodeInfosByText("BUY NOW"))
             {
                 performclickMarketClick(node.getParent());
@@ -135,6 +137,7 @@ public class MyAccessibilityService  extends AccessibilityService {
             for (AccessibilityNodeInfo node : rootInfo.findAccessibilityNodeInfosByText("BUY NOW"))
             {
                 if (node.getParent() != null && (this.rootInfoOld == null || !node.getParent().equals(this.rootInfoOld))){
+                    testIncrement = 0;
                     this.rootInfoOld = node.getParent();
                     performclickMarketClick(node.getParent());
                 }
@@ -143,13 +146,14 @@ public class MyAccessibilityService  extends AccessibilityService {
     }
 
     public void performclickMarketClick(AccessibilityNodeInfo nodeParent){
-        if (nodeParent != null && nodeParent.isClickable()  ){
-            if (nodeParent.getChildCount()<3){
-                nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+        if (nodeParent != null){
+            if (nodeParent.isClickable()  ){
+                if (nodeParent.getChildCount()<3){
+                    nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                }
+            }else{
+                performclickMarketClick(nodeParent.getParent());
             }
-        }else if ((nodeParent != null) && (nodeParent.isClickable() == false)){
-            AccessibilityNodeInfo newnodeParent = nodeParent.getParent();
-            performclickMarketClick(newnodeParent);
         }
     }
 
@@ -162,8 +166,9 @@ public class MyAccessibilityService  extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
 
-        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
+            AccessibilityServiceInfo info = new AccessibilityServiceInfo();
+        info.eventTypes = AccessibilityEvent.TYPE_WINDOWS_CHANGED | AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED | AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                            | AccessibilityEvent.TYPE_VIEW_CLICKED;
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_SPOKEN;
 
         info.notificationTimeout = 10;
