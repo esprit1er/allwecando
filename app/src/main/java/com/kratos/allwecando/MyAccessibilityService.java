@@ -36,7 +36,7 @@ public class MyAccessibilityService  extends AccessibilityService {
     private static final String TAG = "MyAccessibilityService";
     private AccessibilityNodeInfo rootInfoOld = null;
 
-    private double pricebuy = 20.00;
+    private double pricebuy = 7.00;
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -107,24 +107,15 @@ public class MyAccessibilityService  extends AccessibilityService {
     }
 
     public void marketClick( AccessibilityNodeInfo rootInfo){
-        List<AccessibilityNodeInfo> wallet =  rootInfo.findAccessibilityNodeInfosByText("Wallet Balance:");
-        if (wallet.size()>0 && wallet.get(0).getParent() != null){
-            for (AccessibilityNodeInfo node : wallet.get(0).getParent().findAccessibilityNodeInfosByText("BUY NOW"))
-            {
+        for (AccessibilityNodeInfo node : rootInfo.findAccessibilityNodeInfosByText("BUY NOW"))
+        {
+            if (node.getParent() != null && (this.rootInfoOld == null || !node.getParent().equals(this.rootInfoOld))){
+                this.rootInfoOld = node.getParent();
                 performclickMarketClick(node.getParent());
-                break;
-            }
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }else{
-            for (AccessibilityNodeInfo node : rootInfo.findAccessibilityNodeInfosByText("BUY NOW"))
-            {
-                if (node.getParent() != null && (this.rootInfoOld == null || !node.getParent().equals(this.rootInfoOld))){
-                    this.rootInfoOld = node.getParent();
-                    performclickMarketClick(node.getParent());
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }
