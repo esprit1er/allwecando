@@ -36,7 +36,7 @@ public class MyAccessibilityService  extends AccessibilityService {
     private static final String TAG = "MyAccessibilityService";
     private AccessibilityNodeInfo rootInfoOld = null;
 
-    private double pricebuy = 7.00;
+    private double pricebuy = 3.00;
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
