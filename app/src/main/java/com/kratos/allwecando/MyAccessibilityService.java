@@ -18,7 +18,7 @@ public class MyAccessibilityService  extends AccessibilityService {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        //Log.e(TAG, "onAccessibilityEvent: "+AccessibilityEvent.obtain(event.getEventType()));
+        Log.e(TAG, "onAccessibilityEvent: "+AccessibilityEvent.obtain(event.getEventType()));
         AccessibilityNodeInfo rootInfo = getRootInActiveWindow();
         dropClick(rootInfo);
 
