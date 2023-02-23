@@ -30,7 +30,7 @@ public class MyAccessibilityService  extends AccessibilityService {
         if (nodeParent != null && nodeParent.getChildCount() < 3) {
             nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             try {
-                Thread.sleep(239400);
+                Thread.sleep(239800);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
