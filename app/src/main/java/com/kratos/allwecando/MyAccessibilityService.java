@@ -37,7 +37,7 @@ public class MyAccessibilityService  extends AccessibilityService {
     private AccessibilityNodeInfo rootInfoOld = null;
     private AccessibilityNodeInfo itemMarket = null;
 
-    private int mintBuy = 500;
+    private int mintBuy = 100;
     private int testIncrement = 0;
 
 
