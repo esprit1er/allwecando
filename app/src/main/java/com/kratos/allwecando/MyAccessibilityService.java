@@ -57,8 +57,13 @@ public class MyAccessibilityService extends AccessibilityService {
         }
         clickableParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
         mClickedNodes.put(key, clickableParent);
+        try {
+            Thread.sleep(mDelayTime);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        mHandler.postDelayed(new Runnable() {
+        /*mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 clickableParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
@@ -66,7 +71,7 @@ public class MyAccessibilityService extends AccessibilityService {
                 mClickedNodes.remove(key);
                 clickableParent.recycle();
             }
-        }, mDelayTime);
+        }, mDelayTime);*/
     }
 
     private AccessibilityNodeInfo findClickableParent(AccessibilityNodeInfo node) {
