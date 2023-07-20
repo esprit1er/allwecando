@@ -2,32 +2,12 @@ package com.kratos.allwecando;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
-import android.accessibilityservice.GestureDescription;
-import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.graphics.Path;
-import android.graphics.Rect;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import org.apache.commons.net.ntp.NTPUDPClient;
-import org.apache.commons.net.ntp.TimeInfo;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Random;
-import java.util.TimeZone;
 
 import androidx.annotation.RequiresApi;
 
@@ -35,8 +15,6 @@ public class MyAccessibilityService  extends AccessibilityService {
 
     private static final String TAG = "MyAccessibilityService";
     private AccessibilityNodeInfo rootInfoOld = null;
-
-    private double pricebuy = 3.00;
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -67,7 +45,7 @@ public class MyAccessibilityService  extends AccessibilityService {
     public void findChildViewByPrice( AccessibilityNodeInfo roootnode){
         if (roootnode != null){
             for (int i = 0; i< roootnode.getChildCount() ; i++){
-                if (roootnode.getChild(i) != null && "android.widget.ScrollView".equals(roootnode.getChild(i).getClassName())){
+                if (roootnode.getChild(i) != null && "android.widget.ScrollView".contentEquals(roootnode.getChild(i).getClassName())){
                     testSnipMarketByPrice(roootnode.getChild(i));
                     break;
                 }else{
@@ -81,9 +59,10 @@ public class MyAccessibilityService  extends AccessibilityService {
             for (int j = 0; j< scrollView.getChildCount(); j++){
                 AccessibilityNodeInfo viewGroups = scrollView.getChild(j);
                 double priceMarket = 0.0;
+                double pricebuy = 3.00;
                 if (viewGroups!= null && viewGroups.getChildCount()>0){
                     for (int i = 0; i< viewGroups.getChildCount(); i++){
-                        if (viewGroups.getChild(i) != null && "android.widget.TextView".equals(viewGroups.getChild(i).getClassName()) && viewGroups.getChild(i).getText() != null){
+                        if (viewGroups.getChild(i) != null && "android.widget.TextView".contentEquals(viewGroups.getChild(i).getClassName()) && viewGroups.getChild(i).getText() != null){
                             String text = viewGroups.getChild(i).getText().toString();
                             if (isNumeric(text)){
                                 try {
@@ -126,7 +105,7 @@ public class MyAccessibilityService  extends AccessibilityService {
             if (nodeParent.getChildCount()<3){
                 nodeParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             }
-        }else if ((nodeParent != null) && (nodeParent.isClickable() == false)){
+        }else if ((nodeParent != null) && (!nodeParent.isClickable())){
             AccessibilityNodeInfo newnodeParent = nodeParent.getParent();
             performclickMarketClick(newnodeParent);
         }
@@ -156,7 +135,7 @@ public class MyAccessibilityService  extends AccessibilityService {
             return false;
         }
         try {
-            double d = Double.parseDouble(strNum);
+            Double.parseDouble(strNum);
         } catch (NumberFormatException nfe) {
             return false;
         }
