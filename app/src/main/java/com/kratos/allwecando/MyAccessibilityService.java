@@ -18,11 +18,13 @@ public class MyAccessibilityService extends AccessibilityService {
 
     private static final String TAG = "MyAccessibilityService";
     private static final String BUY_NOW = "BUY NOW";
+    private static final String CONFIRM_PURCHASE = "Confirm Purchase";
     private AccessibilityNodeInfo mRootInfo;
     private long mDelayTime = 239800; // 4 minutes
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private Map<String, AccessibilityNodeInfo> mCache = new HashMap<>();
     private Map<String, AccessibilityNodeInfo> mClickedNodes = new HashMap<>();
+    private boolean isClicked = false;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -36,11 +38,25 @@ public class MyAccessibilityService extends AccessibilityService {
 
             if (mRootInfo != null) {
                 List<AccessibilityNodeInfo> nodes = mRootInfo.findAccessibilityNodeInfosByText(BUY_NOW);
-                for (AccessibilityNodeInfo node : nodes) {
-                    String key = node.toString();
-                    if (!mCache.containsKey(key) && !mClickedNodes.containsKey(key)) {
-                        mCache.put(key, node);
-                        performDropClick(node.getParent(), key);
+                if (isClicked){
+                    nodes = mRootInfo.findAccessibilityNodeInfosByText(CONFIRM_PURCHASE);
+                    if (nodes.size()>0){
+                        List<AccessibilityNodeInfo> nodesConfirmBuyNow = nodes.get(0).getParent().findAccessibilityNodeInfosByText(BUY_NOW);
+                        for (AccessibilityNodeInfo node : nodesConfirmBuyNow) {
+                            String key = node.toString();
+                            if (!mCache.containsKey(key) && !mClickedNodes.containsKey(key)) {
+                                mCache.put(key, node);
+                                performDropClick(node.getParent(), key);
+                            }
+                        }
+                    }
+                }else {
+                    for (AccessibilityNodeInfo node : nodes) {
+                        String key = node.toString();
+                        if (!mCache.containsKey(key) && !mClickedNodes.containsKey(key)) {
+                            mCache.put(key, node);
+                            performDropClick(node.getParent(), key);
+                        }
                     }
                 }
             }
@@ -55,23 +71,21 @@ public class MyAccessibilityService extends AccessibilityService {
         if (clickableParent == null || clickableParent.getChildCount() >= 3) {
             return;
         }
-        clickableParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-        mClickedNodes.put(key, clickableParent);
-        try {
-            Thread.sleep(mDelayTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (isClicked){
+            clickableParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            mClickedNodes.put(key, clickableParent);
+            isClicked = false;
+            try {
+                Thread.sleep(mDelayTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }else{
+            clickableParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            mClickedNodes.put(key, clickableParent);
+            isClicked = true;
         }
 
-        /*mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                clickableParent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                mCache.remove(key);
-                mClickedNodes.remove(key);
-                clickableParent.recycle();
-            }
-        }, mDelayTime);*/
     }
 
     private AccessibilityNodeInfo findClickableParent(AccessibilityNodeInfo node) {
